@@ -26,7 +26,7 @@ Function Create-Notifications {
     #TODO: Refactoring: reduce code duplication
     #TODO: Twilights
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
-        -Subject "Восход солнца" `
+        -Subject "Восход солнца в $($data.sun.morning.sunrise)" `
         -Body $data.sun.morning.sunrise `
         -Location $outlookEventLocation `
         -MeetingStart ($currentDate.Date + $data.sun.morning.sunrise) `
@@ -35,7 +35,7 @@ Function Create-Notifications {
         -Categories "Sunrise" `
         -CheckDuplicates
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
-        -Subject "Закат солнца" `
+        -Subject "Закат солнца в $($data.sun.evening.sunset)" `
         -Body $data.sun.evening.sunset `
         -Location $outlookEventLocation `
         -MeetingStart ($currentDate.Date + $data.sun.evening.sunset) `
