@@ -1,16 +1,13 @@
 ﻿[datetime]$currentDate=Get-Date
-[int]$day=$currentDate.Day
-[int]$month=$currentDate.Month
-[int]$timeZone=[TimeZoneInfo]::Local.BaseUtcOffset.Hours
-[int]$dst=[int]$currentDate.IsDaylightSavingTime()
-[double]$latitude=50.5
-[double]$longitude=30.5
-[string]$url="http://www.earthtools.org/sun/$latitude/$longitude/$day/$month/$timeZone/$dst"
+[string]$apiKey="7fff5ef13308f08a"
+[string]$country="Ukraine"
+[string]$city="Kyiv"
+[string]$url="http://api.wunderground.com/api/$apiKey/astronomy/q/$country/$city.xml"
 [string]$outputDir = "Output"
 [string]$outputFileName = "Daylight.xml"
 [string]$outputFilePath = Join-Path $outputDir $outputFileName
 [string]$outlookCalendarName = "Daylight"
-[string]$outlookEventLocation="Киев"
+[string]$outlookEventLocation="$city($country)"
 [int]$outlookEventSensitivity = 2 # olPrivate
 
 Function Get-Data {
@@ -24,21 +21,24 @@ Function Get-Data {
 Function Create-Notifications {
     [xml] $data = Get-Content $outputFilePath
     #TODO: Refactoring: reduce code duplication
-    #TODO: Twilights
+    [Xml.XmlElement]$sunriseNode=$data.response.sun_phase.sunrise
+    [System.TimeSpan]$sunrise=New-Object System.TimeSpan -ArgumentList $sunriseNode.hour, $sunriseNode.minute, 0
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
-        -Subject "Восход солнца в $($data.sun.morning.sunrise)" `
-        -Body $data.sun.morning.sunrise `
+        -Subject "Sunrise at $sunrise" `
+        -Body $sunrise `
         -Location $outlookEventLocation `
-        -MeetingStart ($currentDate.Date + $data.sun.morning.sunrise) `
+        -MeetingStart ($currentDate.Date + $sunrise) `
         -MeetingDuration 0 `
         -Sensitivity $outlookEventSensitivity `
         -Categories "Sunrise" `
         -CheckDuplicates
+    [Xml.XmlElement]$sunsetNode=$data.response.sun_phase.sunset
+    [System.TimeSpan]$sunset=New-Object System.TimeSpan -ArgumentList $sunsetNode.hour, $sunsetNode.minute, 0
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
-        -Subject "Закат солнца в $($data.sun.evening.sunset)" `
-        -Body $data.sun.evening.sunset `
+        -Subject "Sunset at $sunset" `
+        -Body $sunset `
         -Location $outlookEventLocation `
-        -MeetingStart ($currentDate.Date + $data.sun.evening.sunset) `
+        -MeetingStart ($currentDate.Date + $sunset) `
         -MeetingDuration 0 `
         -Sensitivity $outlookEventSensitivity `
         -Categories "Sunset" `
