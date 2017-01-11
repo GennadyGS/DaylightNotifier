@@ -6,6 +6,7 @@
 [string]$outputDir = "Output"
 [string]$outputFileName = "Daylight.xml"
 [string]$outputFilePath = Join-Path $outputDir $outputFileName
+[string]$outlookRootFolderName = "Gennadii_Saltyshchak@epam.com"
 [string]$outlookCalendarName = "Daylight"
 [string]$outlookEventLocation="$city($country)"
 [int]$outlookEventSensitivity = 2 # olPrivate
@@ -31,7 +32,8 @@ Function Create-Notifications {
         -MeetingDuration 0 `
         -Sensitivity $outlookEventSensitivity `
         -Categories "Sunrise" `
-        -CheckDuplicates
+        -CheckDuplicates `
+        -RootFolderName $outlookRootFolderName
     [Xml.XmlElement]$sunsetNode=$data.response.sun_phase.sunset
     [System.TimeSpan]$sunset=New-Object System.TimeSpan -ArgumentList $sunsetNode.hour, $sunsetNode.minute, 0
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
@@ -42,7 +44,8 @@ Function Create-Notifications {
         -MeetingDuration 0 `
         -Sensitivity $outlookEventSensitivity `
         -Categories "Sunset" `
-        -CheckDuplicates
+        -CheckDuplicates `
+        -RootFolderName $outlookRootFolderName
 }
 
 Push-Location (Split-Path $MyInvocation.MyCommand.Path -Parent)

@@ -197,14 +197,16 @@
 		[string[]] $Categories = @(),
 	
 		# Check for duplicates
-		[switch] $CheckDuplicates = $false
+		[switch] $CheckDuplicates = $false,
 	
+		# RootFolderName Parameter	
+		[string] $RootFolderName = $null
 	)
 	
 	BEGIN { 
 	        
     	    Write-Verbose " Looking for calendar $CalendarName"
-            $calendarFolder = Get-OutlookCalendarFolder $CalendarName
+            $calendarFolder = Get-OutlookCalendarFolder $CalendarName $RootFolderName
 	      }
 	
 	
@@ -255,9 +257,11 @@
     Function Get-OutlookCalendarFolder {
 
         Param (
-            [string]$calendarName
+            [string]$calendarName,
+            [string]$rootFolderName = $null
         )
-        $rootFolder = $outlookApplication.Session.Folders.Item(1)
+        $rootFolderNameOfIndex = if ($rootFolderName) {$rootFolderName} else {1};
+        $rootFolder = $outlookApplication.Session.Folders.Item($rootFolderNameOfIndex)
         if (!($rootFolder)) {
             throw "Root folder not found"
         }
