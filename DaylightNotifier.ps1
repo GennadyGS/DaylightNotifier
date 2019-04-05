@@ -1,46 +1,40 @@
-﻿[datetime]$currentDate=Get-Date
-[string]$apiKey="7fff5ef13308f08a"
-[string]$country="Ukraine"
-[string]$city="Kyiv"
-[string]$url="http://api.wunderground.com/api/$apiKey/astronomy/q/$country/$city.xml"
-[string]$outputDir = "Output"
-[string]$outputFileName = "Daylight.xml"
-[string]$outputFilePath = Join-Path $outputDir $outputFileName
-[string]$outlookRootFolderName = "Gennadii_Saltyshchak@epam.com"
-[string]$outlookCalendarName = "Daylight"
-[string]$outlookEventLocation="$city($country)"
-[int]$outlookEventSensitivity = 2 # olPrivate
-
-Function Get-Data {
-    [Microsoft.PowerShell.Commands.WebResponseObject]$webResponse = Invoke-WebRequest $url
-    [IO.Stream]$contentStream = $webResponse.RawContentStream
-    $contentStream.Position = 0
-    [IO.StreamReader]$streamReader = new-object IO.StreamReader($contentStream)
-    $streamReader.ReadToEnd() | Out-File $outputFilePath -Encoding utf8
-}
+﻿[datetime]$currentDate=[DateTime]::Now.Date
+$currentDateFormatted = 
+$lattitude=50.4433
+$longitude=30.5247
+$url="https://api.sunrise-sunset.org/json?lat=$lattitude&lng=$longitude&date=$($currentDate.ToString("yyyy-MM-dd"))"
+$outputDir = "Output"
+$outputFileName = "Daylight.json"
+$outputFilePath = Join-Path $outputDir $outputFileName
+$outlookRootFolderName = "Gennadii_Saltyshchak@epam.com"
+$outlookCalendarName = "Daylight"
+$outlookEventLocation="$city($country)"
+$outlookEventSensitivity = 2 # olPrivate
 
 Function Create-Notifications {
-    [xml] $data = Get-Content $outputFilePath
+    $output = Invoke-RestMethod -Uri $url
+    $timeZoneOffset = [TimeZoneInfo]::Local.GetUtcOffset($currentDate)
+    $sunRiseTime = [DateTime]::Parse($output.results.sunrise).TimeOfDay + $timeZoneOffset
+    $sunSetTime = [DateTime]::Parse($output.results.sunset).TimeOfDay + $timeZoneOffset
+    $sunRise = $currentDate + $sunRiseTime
+    $sunSet = $currentDate + $sunSetTime
+
     #TODO: Refactoring: reduce code duplication
-    [Xml.XmlElement]$sunriseNode=$data.response.sun_phase.sunrise
-    [System.TimeSpan]$sunrise=New-Object System.TimeSpan -ArgumentList $sunriseNode.hour, $sunriseNode.minute, 0
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
-        -Subject "Sunrise at $sunrise" `
-        -Body $sunrise `
+        -Subject "Sunrise at $sunRiseTime" `
+        -Body $sunRiseTime `
         -Location $outlookEventLocation `
-        -MeetingStart ($currentDate.Date + $sunrise) `
+        -MeetingStart $sunRise `
         -MeetingDuration 0 `
         -Sensitivity $outlookEventSensitivity `
         -Categories "Sunrise" `
         -CheckDuplicates `
         -RootFolderName $outlookRootFolderName
-    [Xml.XmlElement]$sunsetNode=$data.response.sun_phase.sunset
-    [System.TimeSpan]$sunset=New-Object System.TimeSpan -ArgumentList $sunsetNode.hour, $sunsetNode.minute, 0
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
-        -Subject "Sunset at $sunset" `
-        -Body $sunset `
+        -Subject "Sunset at $sunSetTime" `
+        -Body $sunSetTime `
         -Location $outlookEventLocation `
-        -MeetingStart ($currentDate.Date + $sunset) `
+        -MeetingStart $sunSet `
         -MeetingDuration 0 `
         -Sensitivity $outlookEventSensitivity `
         -Categories "Sunset" `
@@ -53,6 +47,5 @@ Import-Module .\Modules\OutlookTools\OutlookTools.psm1
 If (!(Test-Path $outputDir)) {
     New-Item  -Type Directory $outputDir | Out-Null
 }
-Get-Data
 Create-Notifications
 Pop-Location
