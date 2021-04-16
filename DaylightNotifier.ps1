@@ -1,17 +1,16 @@
-﻿[datetime]$currentDate=[DateTime]::Now.Date
-$currentDateFormatted = 
-$lattitude=50.4433
+﻿$lattitude=50.4433
 $longitude=30.5247
-$url="https://api.sunrise-sunset.org/json?lat=$lattitude&lng=$longitude&date=$($currentDate.ToString("yyyy-MM-dd"))"
 $outputDir = "Output"
-$outputFileName = "Daylight.json"
-$outputFilePath = Join-Path $outputDir $outputFileName
 $outlookRootFolderName = "Gennadii_Saltyshchak@epam.com"
 $outlookCalendarName = "Daylight"
 $outlookEventLocation="$city($country)"
 $outlookEventSensitivity = 2 # olPrivate
 
-Function Create-Notifications {
+Function CreateNotifications {
+    param (
+        [DateTime] $date
+    )
+    $url="https://api.sunrise-sunset.org/json?lat=$lattitude&lng=$longitude&date=$($date.ToString("yyyy-MM-dd"))"
     $output = Invoke-RestMethod -Uri $url
     $timeZoneOffset = [TimeZoneInfo]::Local.GetUtcOffset($currentDate)
     $sunRiseTime = [DateTime]::Parse($output.results.sunrise).TimeOfDay + $timeZoneOffset
@@ -47,5 +46,6 @@ Import-Module .\Modules\OutlookTools\OutlookTools.psm1
 If (!(Test-Path $outputDir)) {
     New-Item  -Type Directory $outputDir | Out-Null
 }
-Create-Notifications
+CreateNotifications ([DateTime]::UtcNow.Date)
+CreateNotifications ([DateTime]::UtcNow.Date.AddDays(1))
 Pop-Location
