@@ -12,11 +12,11 @@ Function CreateNotifications {
     )
     $url="https://api.sunrise-sunset.org/json?lat=$lattitude&lng=$longitude&date=$($date.ToString("yyyy-MM-dd"))"
     $output = Invoke-RestMethod -Uri $url
-    $timeZoneOffset = [TimeZoneInfo]::Local.GetUtcOffset($currentDate)
+    $timeZoneOffset = [TimeZoneInfo]::Local.GetUtcOffset($date)
     $sunRiseTime = [DateTime]::Parse($output.results.sunrise).TimeOfDay + $timeZoneOffset
     $sunSetTime = [DateTime]::Parse($output.results.sunset).TimeOfDay + $timeZoneOffset
-    $sunRise = $currentDate + $sunRiseTime
-    $sunSet = $currentDate + $sunSetTime
+    $sunRise = $date + $sunRiseTime
+    $sunSet = $date + $sunSetTime
 
     #TODO: Refactoring: reduce code duplication
     New-OutlookCalendarMeeting -CalendarName $outlookCalendarName `
@@ -46,6 +46,5 @@ Import-Module .\Modules\OutlookTools\OutlookTools.psm1
 If (!(Test-Path $outputDir)) {
     New-Item  -Type Directory $outputDir | Out-Null
 }
-CreateNotifications ([DateTime]::UtcNow.Date)
 CreateNotifications ([DateTime]::UtcNow.Date.AddDays(1))
 Pop-Location
