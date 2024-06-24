@@ -1,5 +1,5 @@
-﻿$lattitude=50.4433
-$longitude=30.5247
+﻿$lattitude=50.5299
+$longitude=30.5954
 $outputDir = "Output"
 $outlookRootFolderName = "Gennadii_Saltyshchak@epam.com"
 $outlookCalendarName = "Daylight"
